@@ -2,9 +2,16 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#121212">
     <title>Tabata Timer</title>
     <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #121212;
@@ -13,114 +20,188 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            min-height: 100dvh;
             margin: 0;
+            padding: 16px;
             transition: background-color 0.3s ease;
+            touch-action: manipulation;
         }
+
         .container {
             background: #1e1e1e;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            padding: clamp(1.25rem, 4vw, 2.25rem);
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.55);
             text-align: center;
-            width: 90%;
-            max-width: 400px;
+            width: 100%;
+            max-width: 460px;
         }
+
+        h2 {
+            margin: 0 0 1rem 0;
+            font-size: clamp(1.35rem, 4vw, 1.7rem);
+        }
+
         .inputs {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
+
         .input-group {
             display: flex;
             flex-direction: column;
         }
+
         label {
             font-size: 0.85rem;
-            color: #aaa;
-            margin-bottom: 5px;
+            color: #b5b5b5;
+            margin-bottom: 6px;
         }
+
         input {
-            padding: 10px;
-            font-size: 1.1rem;
-            border-radius: 8px;
-            border: 1px solid #333;
+            padding: 12px 6px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 1px solid #383838;
             background: #2c2c2c;
-            color: white;
+            color: #ffffff;
             text-align: center;
+            width: 100%;
         }
+
+        input:focus {
+            outline: 2px solid #2ecc71;
+            border-color: transparent;
+        }
+
         #status {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: clamp(1.25rem, 4vw, 1.65rem);
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-top: 10px;
+            margin-top: 8px;
+            min-height: 2rem;
         }
+
         #timer {
-            font-size: 5.5rem;
+            font-size: clamp(4.5rem, 22vw, 7rem);
             font-weight: 800;
+            line-height: 1.05;
             margin: 10px 0;
             font-variant-numeric: tabular-nums;
         }
+
         #round-info {
-            font-size: 1.2rem;
-            color: #bbb;
-            margin-bottom: 25px;
+            font-size: clamp(1.05rem, 3.5vw, 1.25rem);
+            color: #c2c2c2;
+            margin-bottom: 22px;
         }
+
         .buttons {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            justify-content: center;
         }
+
         button {
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: bold;
+            padding: 15px 10px;
+            font-size: 1.05rem;
+            font-weight: 700;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: transform 0.1s;
+            min-height: 52px;
+            transition: transform 0.1s ease, opacity 0.2s ease;
         }
-        button:active { transform: scale(0.96); }
-        #start-btn { background-color: #2ecc71; color: #000; }
-        #pause-btn { background-color: #f1c40f; color: #000; }
-        #reset-btn { background-color: #e74c3c; color: #fff; }
-        
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        #start-btn { background-color: #2ecc71; color: #000000; }
+        #pause-btn { background-color: #f1c40f; color: #000000; }
+        #reset-btn { background-color: #e74c3c; color: #ffffff; }
+
+        #wake-status {
+            margin-top: 14px;
+            font-size: 0.8rem;
+            color: #9a9a9a;
+            min-height: 1.1rem;
+        }
+
         /* Farben für Phasen */
         body.work-phase { background-color: #143622; }
         body.rest-phase { background-color: #3b2a14; }
+
+        /* Querformat auf Smartphones/Tablets */
+        @media (max-height: 520px) and (orientation: landscape) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 720px;
+                display: grid;
+                grid-template-columns: 1.1fr 1fr;
+                gap: 16px;
+                align-items: center;
+                text-align: left;
+            }
+            h2, #wake-status {
+                grid-column: 1 / -1;
+                text-align: center;
+                margin: 0;
+            }
+            .display-col {
+                text-align: center;
+            }
+            #timer {
+                font-size: clamp(3.5rem, 14vh, 5rem);
+                margin: 4px 0;
+            }
+            #round-info {
+                margin-bottom: 0;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>Tabata Timer</h2>
-    
-    <div class="inputs">
-        <div class="input-group">
-            <label for="work-time">Übung (s)</label>
-            <input type="number" id="work-time" value="45" min="1">
+
+    <div class="controls-col">
+        <div class="inputs">
+            <div class="input-group">
+                <label for="work-time">Übung (s)</label>
+                <input type="number" id="work-time" inputmode="numeric" value="45" min="1">
+            </div>
+            <div class="input-group">
+                <label for="rest-time">Pause (s)</label>
+                <input type="number" id="rest-time" inputmode="numeric" value="15" min="0">
+            </div>
+            <div class="input-group">
+                <label for="rounds">Runden</label>
+                <input type="number" id="rounds" inputmode="numeric" value="10" min="1">
+            </div>
         </div>
-        <div class="input-group">
-            <label for="rest-time">Pause (s)</label>
-            <input type="number" id="rest-time" value="15" min="0">
-        </div>
-        <div class="input-group">
-            <label for="rounds">Runden</label>
-            <input type="number" id="rounds" value="10" min="1">
+
+        <div class="buttons">
+            <button id="start-btn">Start</button>
+            <button id="pause-btn">Pause</button>
+            <button id="reset-btn">Reset</button>
         </div>
     </div>
 
-    <div id="status">BEREIT</div>
-    <div id="timer">45</div>
-    <div id="round-info">Runde: 0 / 10</div>
-
-    <div class="buttons">
-        <button id="start-btn">Start</button>
-        <button id="pause-btn">Pause</button>
-        <button id="reset-btn">Reset</button>
+    <div class="display-col">
+        <div id="status">BEREIT</div>
+        <div id="timer">45</div>
+        <div id="round-info">Runde: 0 / 10</div>
     </div>
+
+    <div id="wake-status"></div>
 </div>
 
 <script>
@@ -128,6 +209,7 @@
     let isRunning = false;
     let isPaused = false;
     let timerInterval = null;
+    let wakeLock = null;
 
     let currentRound = 1;
     let totalRounds = 10;
@@ -139,15 +221,50 @@
     const statusEl = document.getElementById("status");
     const timerEl = document.getElementById("timer");
     const roundInfoEl = document.getElementById("round-info");
+    const wakeStatusEl = document.getElementById("wake-status");
     const workInput = document.getElementById("work-time");
     const restInput = document.getElementById("rest-time");
     const roundsInput = document.getElementById("rounds");
+
+    async function requestWakeLock() {
+        if ("wakeLock" in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request("screen");
+                wakeStatusEl.textContent = "Display bleibt aktiv";
+                wakeLock.addEventListener("release", () => {
+                    if (!isRunning || isPaused) {
+                        wakeStatusEl.textContent = "";
+                    }
+                });
+            } catch (err) {
+                wakeStatusEl.textContent = "";
+            }
+        }
+    }
+
+    async function releaseWakeLock() {
+        if (wakeLock !== null) {
+            try {
+                await wakeLock.release();
+                wakeLock = null;
+            } catch (err) {
+                // Ignorieren, falls bereits freigegeben
+            }
+        }
+        wakeStatusEl.textContent = "";
+    }
+
+    document.addEventListener("visibilitychange", async () => {
+        if (document.visibilityState === "visible" && isRunning && !isPaused) {
+            await requestWakeLock();
+        }
+    });
 
     function playBeep(freq, duration, volume = 0.5) {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (audioCtx.state === 'suspended') {
+        if (audioCtx.state === "suspended") {
             audioCtx.resume();
         }
 
@@ -166,9 +283,9 @@
     }
 
     function updateUI(statusText, time, round, maxRounds, phaseClass = "") {
-        statusEl.innerText = statusText;
-        timerEl.innerText = time;
-        roundInfoEl.innerText = `Runde: ${round} / ${maxRounds}`;
+        statusEl.textContent = statusText;
+        timerEl.textContent = time;
+        roundInfoEl.textContent = `Runde: ${round} / ${maxRounds}`;
         document.body.className = phaseClass;
     }
 
@@ -186,21 +303,17 @@
                 isWorkPhase ? "work-phase" : "rest-phase"
             );
 
-            // In den letzten 3 Sekunden (3, 2, 1) kurzer Piepton
             if (timeLeft <= 3) {
                 playBeep(600, 0.15, 0.4);
             }
         } else {
-            // Zeit abgelaufen: lauterer, längerer Signalton
             playBeep(950, 0.6, 1.0);
 
             if (isWorkPhase && restSec > 0) {
-                // Wechsel in Ruhephase
                 isWorkPhase = false;
                 timeLeft = restSec;
                 updateUI("PAUSE", timeLeft, currentRound, totalRounds, "rest-phase");
             } else {
-                // Nächste Runde oder Fertig
                 currentRound++;
                 if (currentRound <= totalRounds) {
                     isWorkPhase = true;
@@ -209,26 +322,27 @@
                 } else {
                     clearInterval(timerInterval);
                     isRunning = false;
+                    releaseWakeLock();
                     updateUI("FERTIG!", 0, totalRounds, totalRounds, "");
                 }
             }
         }
     }
 
-    document.getElementById("start-btn").addEventListener("click", () => {
-        // Audio durch Klick entsperren
+    document.getElementById("start-btn").addEventListener("click", async () => {
         playBeep(0, 0.01, 0);
 
         if (isPaused) {
             isPaused = false;
-            statusEl.innerText = isWorkPhase ? "ÜBUNG!" : "PAUSE";
+            statusEl.textContent = isWorkPhase ? "ÜBUNG!" : "PAUSE";
+            await requestWakeLock();
             return;
         }
 
         if (!isRunning) {
-            workSec = parseInt(workInput.value) || 45;
-            restSec = parseInt(restInput.value) || 0;
-            totalRounds = parseInt(roundsInput.value) || 10;
+            workSec = parseInt(workInput.value, 10) || 45;
+            restSec = parseInt(restInput.value, 10) || 0;
+            totalRounds = parseInt(roundsInput.value, 10) || 10;
 
             currentRound = 1;
             isWorkPhase = true;
@@ -236,35 +350,39 @@
             isRunning = true;
             isPaused = false;
 
+            await requestWakeLock();
             updateUI("ÜBUNG!", timeLeft, currentRound, totalRounds, "work-phase");
             if (timeLeft <= 3) playBeep(600, 0.15, 0.4);
 
+            clearInterval(timerInterval);
             timerInterval = setInterval(tick, 1000);
         }
     });
 
-    document.getElementById("pause-btn").addEventListener("click", () => {
+    document.getElementById("pause-btn").addEventListener("click", async () => {
         if (isRunning && !isPaused) {
             isPaused = true;
-            statusEl.innerText = "PAUSIERT";
+            statusEl.textContent = "PAUSIERT";
+            await releaseWakeLock();
         }
     });
 
-    document.getElementById("reset-btn").addEventListener("click", () => {
+    document.getElementById("reset-btn").addEventListener("click", async () => {
         clearInterval(timerInterval);
         isRunning = false;
         isPaused = false;
-        const w = parseInt(workInput.value) || 45;
-        const r = parseInt(roundsInput.value) || 10;
+        await releaseWakeLock();
+        const w = parseInt(workInput.value, 10) || 45;
+        const r = parseInt(roundsInput.value, 10) || 10;
         updateUI("BEREIT", w, 0, r, "");
     });
 
-    // Vorschau aktualisieren, wenn Eingaben geändert werden
     workInput.addEventListener("input", () => {
-        if (!isRunning) timerEl.innerText = workInput.value || 0;
+        if (!isRunning) timerEl.textContent = workInput.value || 0;
     });
+
     roundsInput.addEventListener("input", () => {
-        if (!isRunning) roundInfoEl.innerText = `Runde: 0 / ${roundsInput.value || 0}`;
+        if (!isRunning) roundInfoEl.textContent = `Runde: 0 / ${roundsInput.value || 0}`;
     });
 </script>
 
