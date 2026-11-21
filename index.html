@@ -227,12 +227,13 @@
         }
 
         .ring-inner {
-            position: relative;
+            position: absolute;
+            inset: 0;
             z-index: 1;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
+            pointer-events: none;
         }
 
         #timer {
@@ -241,6 +242,7 @@
             line-height: 1;
             font-variant-numeric: tabular-nums;
             letter-spacing: -0.03em;
+            text-align: center;
         }
 
         #round-info {
@@ -456,26 +458,33 @@
 
     function ensureAudioContext() {
         if (!audioCtx) {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) {
-                audioCtx = new AudioContextClass();
-            }
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (audioCtx && audioCtx.state === "suspended") {
+        if (audioCtx.state === "suspended") {
             audioCtx.resume();
         }
     }
 
-    function unlockSpeechAndAudio() {
+    function playBeep(freq, duration, volume = 0.5) {
         ensureAudioContext();
+        if (!audioCtx) return;
 
-        if (audioCtx) {
-            const buffer = audioCtx.createBuffer(1, 1, 22050);
-            const source = audioCtx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioCtx.destination);
-            source.start(0);
-        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.value = volume;
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function unlockSpeechAndAudio() {
+        playBeep(0, 0.01, 0);
 
         if ("speechSynthesis" in window) {
             window.speechSynthesis.getVoices();
@@ -506,28 +515,6 @@
         }
 
         window.speechSynthesis.speak(utterance);
-    }
-
-    function playBeep(freq, duration, volume = 0.5) {
-        ensureAudioContext();
-        if (!audioCtx) return;
-
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, now);
-
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(Math.max(0.001, volume), now + 0.015);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start(now);
-        osc.stop(now + duration + 0.02);
     }
 
     async function requestWakeLock() {
@@ -613,7 +600,7 @@
                 speakEnglish("One", 1.0);
             }
         } else {
-            playBeep(950, 0.65, 1.0);
+            playBeep(950, 0.6, 1.0);
             phase = "work";
             currentRound = 1;
             phaseDuration = workSec;
@@ -689,19 +676,16 @@
         syncToggleButton();
     }
 
-    // Von Screen 1 auf Screen 2 wechseln und direkt starten
     goToTimerBtn.addEventListener("click", async () => {
         showScreen("timer");
         await startNewWorkout();
     });
 
-    // Pfeil links oben: Zurück zu den Einstellungen
     backBtn.addEventListener("click", async () => {
         await stopWorkoutToIdle();
         showScreen("setup");
     });
 
-    // Start / Pause Umschalt-Button auf dem Timer-Screen
     toggleBtn.addEventListener("click", async () => {
         unlockSpeechAndAudio();
 
@@ -735,7 +719,6 @@
         }
     });
 
-    // Reset-Button auf dem Timer-Screen
     resetBtn.addEventListener("click", async () => {
         readInputs();
         await stopWorkoutToIdle();
