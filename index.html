@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" content="#101216">
     <title>Tabata Timer</title>
     <style>
         :root {
@@ -61,9 +61,10 @@
         }
 
         .container {
+            position: relative;
             background: var(--card-bg);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: clamp(1.25rem, 4vw, 2.2rem);
+            padding: clamp(1.3rem, 4vw, 2.2rem);
             border-radius: 26px;
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
             text-align: center;
@@ -72,43 +73,56 @@
             transition: background-color 0.35s ease;
         }
 
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
         h2 {
-            margin: 0 0 1.1rem 0;
+            margin: 0 0 1.25rem 0;
             font-size: clamp(1.35rem, 4vw, 1.75rem);
             font-weight: 700;
             letter-spacing: -0.02em;
         }
 
-        .inputs {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 18px;
-        }
-
-        .input-group {
+        /* Screen 1: Einstellungen */
+        .setup-grid {
             display: flex;
             flex-direction: column;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface-bg);
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: background-color 0.35s ease;
         }
 
         label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            font-weight: 500;
+            font-size: 1rem;
+            color: var(--text-main);
+            font-weight: 600;
         }
 
         input {
-            padding: 11px 6px;
-            font-size: 1.15rem;
+            width: 105px;
+            padding: 10px 8px;
+            font-size: 1.2rem;
             font-weight: 700;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: var(--surface-bg);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(0, 0, 0, 0.25);
             color: var(--text-main);
             text-align: center;
-            width: 100%;
-            transition: border-color 0.2s ease, background-color 0.35s ease;
         }
 
         input:focus {
@@ -116,20 +130,71 @@
             border-color: var(--accent);
         }
 
+        .primary-go-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border: none;
+            border-radius: 14px;
+            background-color: #2ecc71;
+            color: #071b0f;
+            cursor: pointer;
+            min-height: 54px;
+            transition: transform 0.1s ease, filter 0.2s ease;
+        }
+
+        .primary-go-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Screen 2: Timer */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            min-height: 44px;
+        }
+
+        .back-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--surface-bg);
+            color: var(--text-main);
+            font-size: 1.35rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+        }
+
         #status {
-            font-size: clamp(1.1rem, 3.6vw, 1.45rem);
+            flex: 1;
+            font-size: clamp(1.1rem, 3.6vw, 1.4rem);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: var(--accent);
-            min-height: 1.9rem;
             transition: color 0.35s ease;
+        }
+
+        .top-spacer {
+            width: 44px;
         }
 
         .ring-wrapper {
             position: relative;
-            width: clamp(210px, 58vw, 255px);
-            height: clamp(210px, 58vw, 255px);
+            width: clamp(215px, 60vw, 260px);
+            height: clamp(215px, 60vw, 260px);
             margin: 10px auto 12px auto;
             display: flex;
             align-items: center;
@@ -171,7 +236,7 @@
         }
 
         #timer {
-            font-size: clamp(3.8rem, 16vw, 5.2rem);
+            font-size: clamp(3.9rem, 16vw, 5.3rem);
             font-weight: 850;
             line-height: 1;
             font-variant-numeric: tabular-nums;
@@ -179,40 +244,47 @@
         }
 
         #round-info {
-            font-size: clamp(1rem, 3.4vw, 1.2rem);
+            font-size: clamp(1.05rem, 3.5vw, 1.25rem);
             color: var(--text-muted);
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
 
-        .buttons {
+        .timer-buttons {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
 
-        button {
-            padding: 15px 10px;
-            font-size: 1.02rem;
+        .timer-buttons button {
+            padding: 15px 12px;
+            font-size: 1.05rem;
             font-weight: 700;
             border: none;
             border-radius: 14px;
             cursor: pointer;
-            min-height: 52px;
-            transition: transform 0.1s ease, filter 0.2s ease;
+            min-height: 54px;
+            transition: transform 0.1s ease, filter 0.2s ease, background-color 0.2s ease;
         }
 
-        button:active {
+        .timer-buttons button:active {
             transform: scale(0.96);
         }
 
-        button:hover {
-            filter: brightness(1.06);
+        .btn-start {
+            background-color: #2ecc71;
+            color: #071b0f;
         }
 
-        #start-btn { background-color: #2ecc71; color: #071b0f; }
-        #pause-btn { background-color: #f5c518; color: #1c1600; }
-        #reset-btn { background-color: #ef4444; color: #ffffff; }
+        .btn-pause {
+            background-color: #f5c518;
+            color: #1c1600;
+        }
+
+        #reset-btn {
+            background-color: #ef4444;
+            color: #ffffff;
+        }
 
         #wake-status {
             margin-top: 14px;
@@ -226,31 +298,27 @@
                 padding: 10px;
             }
             .container {
-                max-width: 740px;
+                max-width: 720px;
+            }
+            .screen.active {
+                display: block;
+            }
+            .timer-layout {
                 display: grid;
-                grid-template-columns: 1.1fr 1fr;
+                grid-template-columns: 1fr 1.1fr;
                 gap: 16px;
                 align-items: center;
-                text-align: left;
-            }
-            h2, #wake-status {
-                grid-column: 1 / -1;
-                text-align: center;
-                margin: 0;
-            }
-            .display-col {
-                text-align: center;
             }
             .ring-wrapper {
                 width: clamp(145px, 34vh, 185px);
                 height: clamp(145px, 34vh, 185px);
-                margin: 4px auto 8px auto;
+                margin: 4px auto;
             }
             #timer {
                 font-size: clamp(2.6rem, 10vh, 3.6rem);
             }
             #round-info {
-                margin-bottom: 0;
+                margin-bottom: 14px;
             }
         }
     </style>
@@ -258,46 +326,61 @@
 <body>
 
 <div class="container">
-    <h2>Tabata Timer</h2>
+    <!-- SCREEN 1: EINSTELLUNGEN -->
+    <section id="setup-screen" class="screen active">
+        <h2>Tabata Einstellungen</h2>
 
-    <div class="controls-col">
-        <div class="inputs">
-            <div class="input-group">
-                <label for="work-time">Fitness (s)</label>
+        <div class="setup-grid">
+            <div class="input-row">
+                <label for="work-time">Fitnesszeit (s)</label>
                 <input type="number" id="work-time" inputmode="numeric" value="45" min="1">
             </div>
-            <div class="input-group">
-                <label for="rest-time">Ruhe (s)</label>
+            <div class="input-row">
+                <label for="rest-time">Ruhephase (s)</label>
                 <input type="number" id="rest-time" inputmode="numeric" value="15" min="0">
             </div>
-            <div class="input-group">
-                <label for="rounds">Runden</label>
+            <div class="input-row">
+                <label for="rounds">Rundenanzahl</label>
                 <input type="number" id="rounds" inputmode="numeric" value="10" min="1">
             </div>
         </div>
 
-        <div class="buttons">
-            <button id="start-btn">Start</button>
-            <button id="pause-btn">Pause</button>
-            <button id="reset-btn">Reset</button>
-        </div>
-    </div>
+        <button id="go-to-timer-btn" class="primary-go-btn">Start</button>
+    </section>
 
-    <div class="display-col">
-        <div id="status">BEREIT</div>
-        <div class="ring-wrapper">
-            <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
-                <circle class="progress-ring__track" cx="110" cy="110" r="96"></circle>
-                <circle id="ring-fill" class="progress-ring__fill no-anim" cx="110" cy="110" r="96"></circle>
-            </svg>
-            <div class="ring-inner">
-                <div id="timer">45</div>
+    <!-- SCREEN 2: TIMER -->
+    <section id="timer-screen" class="screen">
+        <div class="top-bar">
+            <button id="back-btn" class="back-btn" aria-label="Zurück zu den Einstellungen" title="Einstellungen">
+                &#8592;
+            </button>
+            <div id="status">BEREIT</div>
+            <div class="top-spacer"></div>
+        </div>
+
+        <div class="timer-layout">
+            <div class="ring-wrapper">
+                <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
+                    <circle class="progress-ring__track" cx="110" cy="110" r="96"></circle>
+                    <circle id="ring-fill" class="progress-ring__fill no-anim" cx="110" cy="110" r="96"></circle>
+                </svg>
+                <div class="ring-inner">
+                    <div id="timer">45</div>
+                </div>
+            </div>
+
+            <div>
+                <div id="round-info">Runde: 0 / 10</div>
+
+                <div class="timer-buttons">
+                    <button id="toggle-btn" class="btn-start">Start</button>
+                    <button id="reset-btn">Reset</button>
+                </div>
             </div>
         </div>
-        <div id="round-info">Runde: 0 / 10</div>
-    </div>
 
-    <div id="wake-status"></div>
+        <div id="wake-status"></div>
+    </section>
 </div>
 
 <script>
@@ -311,7 +394,7 @@
     let timerInterval = null;
     let wakeLock = null;
 
-    let currentRound = 1;
+    let currentRound = 0;
     let totalRounds = 10;
     let workSec = 45;
     let restSec = 15;
@@ -319,17 +402,44 @@
     let timeLeft = 45;
     let phase = "idle"; // "prep" | "work" | "rest" | "idle"
 
+    const setupScreen = document.getElementById("setup-screen");
+    const timerScreen = document.getElementById("timer-screen");
     const statusEl = document.getElementById("status");
     const timerEl = document.getElementById("timer");
     const roundInfoEl = document.getElementById("round-info");
     const wakeStatusEl = document.getElementById("wake-status");
     const ringFillEl = document.getElementById("ring-fill");
+    const toggleBtn = document.getElementById("toggle-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const backBtn = document.getElementById("back-btn");
+    const goToTimerBtn = document.getElementById("go-to-timer-btn");
     const workInput = document.getElementById("work-time");
     const restInput = document.getElementById("rest-time");
     const roundsInput = document.getElementById("rounds");
 
     ringFillEl.style.strokeDasharray = `${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`;
     ringFillEl.style.strokeDashoffset = "0";
+
+    function showScreen(screenName) {
+        if (screenName === "setup") {
+            timerScreen.classList.remove("active");
+            setupScreen.classList.add("active");
+            document.body.className = "";
+        } else {
+            setupScreen.classList.remove("active");
+            timerScreen.classList.add("active");
+        }
+    }
+
+    function syncToggleButton() {
+        if (isRunning && !isPaused) {
+            toggleBtn.textContent = "Pause";
+            toggleBtn.className = "btn-pause";
+        } else {
+            toggleBtn.textContent = "Start";
+            toggleBtn.className = "btn-start";
+        }
+    }
 
     function setRingProgress(remaining, total, instant = false) {
         if (instant) {
@@ -340,7 +450,6 @@
 
         const safeTotal = Math.max(total, 1);
         const ratio = Math.max(0, Math.min(1, remaining / safeTotal));
-        // Bei vollem Timer offset = 0 (voller Kreis), bei 0 Sekunden offset = RING_CIRCUMFERENCE (leer)
         const offset = RING_CIRCUMFERENCE * (1 - ratio);
         ringFillEl.style.strokeDashoffset = `${offset}`;
     }
@@ -463,6 +572,35 @@
         setRingProgress(time, phaseDuration, instantRing);
     }
 
+    function readInputs() {
+        workSec = Math.max(1, parseInt(workInput.value, 10) || 45);
+        restSec = Math.max(0, parseInt(restInput.value, 10) || 0);
+        totalRounds = Math.max(1, parseInt(roundsInput.value, 10) || 10);
+        workInput.value = workSec;
+        restInput.value = restSec;
+        roundsInput.value = totalRounds;
+    }
+
+    async function startNewWorkout() {
+        readInputs();
+        unlockSpeechAndAudio();
+
+        currentRound = 0;
+        phase = "prep";
+        phaseDuration = PREP_SECONDS;
+        timeLeft = PREP_SECONDS;
+        isRunning = true;
+        isPaused = false;
+
+        syncToggleButton();
+        await requestWakeLock();
+        updateUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase", true);
+        speakEnglish("Get ready and we start in", 1.0);
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(tick, 1000);
+    }
+
     function handlePrepCountdownTick() {
         if (timeLeft > 0) {
             updateUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase");
@@ -515,7 +653,9 @@
                 } else {
                     clearInterval(timerInterval);
                     isRunning = false;
+                    isPaused = false;
                     phase = "idle";
+                    syncToggleButton();
                     releaseWakeLock();
                     updateUI("FERTIG!", 0, totalRounds, totalRounds, "", false);
                 }
@@ -535,11 +675,52 @@
         }
     }
 
-    document.getElementById("start-btn").addEventListener("click", async () => {
+    async function stopWorkoutToIdle() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        isPaused = false;
+        phase = "idle";
+        currentRound = 0;
+
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
+        await releaseWakeLock();
+        syncToggleButton();
+    }
+
+    // Von Screen 1 auf Screen 2 wechseln und direkt starten
+    goToTimerBtn.addEventListener("click", async () => {
+        showScreen("timer");
+        await startNewWorkout();
+    });
+
+    // Pfeil links oben: Zurück zu den Einstellungen
+    backBtn.addEventListener("click", async () => {
+        await stopWorkoutToIdle();
+        showScreen("setup");
+    });
+
+    // Start / Pause Umschalt-Button auf dem Timer-Screen
+    toggleBtn.addEventListener("click", async () => {
         unlockSpeechAndAudio();
 
-        if (isPaused) {
+        if (!isRunning) {
+            await startNewWorkout();
+            return;
+        }
+
+        if (!isPaused) {
+            isPaused = true;
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+            syncToggleButton();
+            statusEl.textContent = "PAUSIERT";
+            await releaseWakeLock();
+        } else {
             isPaused = false;
+            syncToggleButton();
             if (phase === "prep") {
                 statusEl.textContent = "BEREIT MACHEN";
                 document.body.className = "prep-phase";
@@ -551,67 +732,15 @@
                 document.body.className = "rest-phase";
             }
             await requestWakeLock();
-            return;
-        }
-
-        if (!isRunning) {
-            workSec = parseInt(workInput.value, 10) || 45;
-            restSec = parseInt(restInput.value, 10) || 0;
-            totalRounds = parseInt(roundsInput.value, 10) || 10;
-
-            currentRound = 0;
-            phase = "prep";
-            phaseDuration = PREP_SECONDS;
-            timeLeft = PREP_SECONDS;
-            isRunning = true;
-            isPaused = false;
-
-            await requestWakeLock();
-            updateUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase", true);
-            speakEnglish("Get ready and we start in", 1.0);
-
-            clearInterval(timerInterval);
-            timerInterval = setInterval(tick, 1000);
         }
     });
 
-    document.getElementById("pause-btn").addEventListener("click", async () => {
-        if (isRunning && !isPaused) {
-            isPaused = true;
-            if ("speechSynthesis" in window) {
-                window.speechSynthesis.cancel();
-            }
-            statusEl.textContent = "PAUSIERT";
-            await releaseWakeLock();
-        }
-    });
-
-    document.getElementById("reset-btn").addEventListener("click", async () => {
-        clearInterval(timerInterval);
-        isRunning = false;
-        isPaused = false;
-        phase = "idle";
-        if ("speechSynthesis" in window) {
-            window.speechSynthesis.cancel();
-        }
-        await releaseWakeLock();
-        const w = parseInt(workInput.value, 10) || 45;
-        const r = parseInt(roundsInput.value, 10) || 10;
-        phaseDuration = w;
-        updateUI("BEREIT", w, 0, r, "", true);
-    });
-
-    workInput.addEventListener("input", () => {
-        if (!isRunning) {
-            const w = parseInt(workInput.value, 10) || 0;
-            phaseDuration = Math.max(w, 1);
-            timerEl.textContent = w;
-            setRingProgress(w, phaseDuration, true);
-        }
-    });
-
-    roundsInput.addEventListener("input", () => {
-        if (!isRunning) roundInfoEl.textContent = `Runde: 0 / ${roundsInput.value || 0}`;
+    // Reset-Button auf dem Timer-Screen
+    resetBtn.addEventListener("click", async () => {
+        readInputs();
+        await stopWorkoutToIdle();
+        phaseDuration = workSec;
+        updateUI("BEREIT", workSec, 0, totalRounds, "", true);
     });
 </script>
 
