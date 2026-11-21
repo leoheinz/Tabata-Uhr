@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabata Timer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s ease;
+        }
+        .container {
+            background: #1e1e1e;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        .inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        input {
+            padding: 10px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #2c2c2c;
+            color: white;
+            text-align: center;
+        }
+        #status {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+        #timer {
+            font-size: 5.5rem;
+            font-weight: 800;
+            margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+        }
+        #round-info {
+            font-size: 1.2rem;
+            color: #bbb;
+            margin-bottom: 25px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.96); }
+        #start-btn { background-color: #2ecc71; color: #000; }
+        #pause-btn { background-color: #f1c40f; color: #000; }
+        #reset-btn { background-color: #e74c3c; color: #fff; }
+        
+        /* Farben für Phasen */
+        body.work-phase { background-color: #143622; }
+        body.rest-phase { background-color: #3b2a14; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Tabata Timer</h2>
+    
+    <div class="inputs">
+        <div class="input-group">
+            <label for="work-time">Übung (s)</label>
+            <input type="number" id="work-time" value="45" min="1">
+        </div>
+        <div class="input-group">
+            <label for="rest-time">Pause (s)</label>
+            <input type="number" id="rest-time" value="15" min="0">
+        </div>
+        <div class="input-group">
+            <label for="rounds">Runden</label>
+            <input type="number" id="rounds" value="10" min="1">
+        </div>
+    </div>
+
+    <div id="status">BEREIT</div>
+    <div id="timer">45</div>
+    <div id="round-info">Runde: 0 / 10</div>
+
+    <div class="buttons">
+        <button id="start-btn">Start</button>
+        <button id="pause-btn">Pause</button>
+        <button id="reset-btn">Reset</button>
+    </div>
+</div>
+
+<script>
+    let audioCtx = null;
+    let isRunning = false;
+    let isPaused = false;
+    let timerInterval = null;
+
+    let currentRound = 1;
+    let totalRounds = 10;
+    let workSec = 45;
+    let restSec = 15;
+    let timeLeft = 45;
+    let isWorkPhase = true;
+
+    const statusEl = document.getElementById("status");
+    const timerEl = document.getElementById("timer");
+    const roundInfoEl = document.getElementById("round-info");
+    const workInput = document.getElementById("work-time");
+    const restInput = document.getElementById("rest-time");
+    const roundsInput = document.getElementById("rounds");
+
+    function playBeep(freq, duration, volume = 0.5) {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.value = volume;
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function updateUI(statusText, time, round, maxRounds, phaseClass = "") {
+        statusEl.innerText = statusText;
+        timerEl.innerText = time;
+        roundInfoEl.innerText = `Runde: ${round} / ${maxRounds}`;
+        document.body.className = phaseClass;
+    }
+
+    function tick() {
+        if (isPaused) return;
+
+        timeLeft--;
+
+        if (timeLeft > 0) {
+            updateUI(
+                isWorkPhase ? "ÜBUNG!" : "PAUSE",
+                timeLeft,
+                currentRound,
+                totalRounds,
+                isWorkPhase ? "work-phase" : "rest-phase"
+            );
+
+            // In den letzten 3 Sekunden (3, 2, 1) kurzer Piepton
+            if (timeLeft <= 3) {
+                playBeep(600, 0.15, 0.4);
+            }
+        } else {
+            // Zeit abgelaufen: lauterer, längerer Signalton
+            playBeep(950, 0.6, 1.0);
+
+            if (isWorkPhase && restSec > 0) {
+                // Wechsel in Ruhephase
+                isWorkPhase = false;
+                timeLeft = restSec;
+                updateUI("PAUSE", timeLeft, currentRound, totalRounds, "rest-phase");
+            } else {
+                // Nächste Runde oder Fertig
+                currentRound++;
+                if (currentRound <= totalRounds) {
+                    isWorkPhase = true;
+                    timeLeft = workSec;
+                    updateUI("ÜBUNG!", timeLeft, currentRound, totalRounds, "work-phase");
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    updateUI("FERTIG!", 0, totalRounds, totalRounds, "");
+                }
+            }
+        }
+    }
+
+    document.getElementById("start-btn").addEventListener("click", () => {
+        // Audio durch Klick entsperren
+        playBeep(0, 0.01, 0);
+
+        if (isPaused) {
+            isPaused = false;
+            statusEl.innerText = isWorkPhase ? "ÜBUNG!" : "PAUSE";
+            return;
+        }
+
+        if (!isRunning) {
+            workSec = parseInt(workInput.value) || 45;
+            restSec = parseInt(restInput.value) || 0;
+            totalRounds = parseInt(roundsInput.value) || 10;
+
+            currentRound = 1;
+            isWorkPhase = true;
+            timeLeft = workSec;
+            isRunning = true;
+            isPaused = false;
+
+            updateUI("ÜBUNG!", timeLeft, currentRound, totalRounds, "work-phase");
+            if (timeLeft <= 3) playBeep(600, 0.15, 0.4);
+
+            timerInterval = setInterval(tick, 1000);
+        }
+    });
+
+    document.getElementById("pause-btn").addEventListener("click", () => {
+        if (isRunning && !isPaused) {
+            isPaused = true;
+            statusEl.innerText = "PAUSIERT";
+        }
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+        clearInterval(timerInterval);
+        isRunning = false;
+        isPaused = false;
+        const w = parseInt(workInput.value) || 45;
+        const r = parseInt(roundsInput.value) || 10;
+        updateUI("BEREIT", w, 0, r, "");
+    });
+
+    // Vorschau aktualisieren, wenn Eingaben geändert werden
+    workInput.addEventListener("input", () => {
+        if (!isRunning) timerEl.innerText = workInput.value || 0;
+    });
+    roundsInput.addEventListener("input", () => {
+        if (!isRunning) roundInfoEl.innerText = `Runde: 0 / ${roundsInput.value || 0}`;
+    });
+</script>
+
+</body>
+</html>
