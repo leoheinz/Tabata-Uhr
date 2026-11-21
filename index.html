@@ -86,7 +86,7 @@
             border-radius: 30px;
             text-align: center;
             width: 100%;
-            max-width: 450px;
+            max-width: 480px;
             transition: background-color 0.4s ease, border-color 0.4s ease;
         }
 
@@ -230,6 +230,7 @@
             justify-content: space-between;
             margin-bottom: 10px;
             min-height: 44px;
+            width: 100%;
         }
 
         .back-btn {
@@ -258,7 +259,7 @@
 
         #status {
             flex: 1;
-            font-size: clamp(1.05rem, 3.5vw, 1.35rem);
+            font-size: clamp(1.1rem, 3.6vw, 1.45rem);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.16em;
@@ -270,16 +271,23 @@
             width: 44px;
         }
 
+        .timer-center-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
         .ring-wrapper {
             position: relative;
-            width: clamp(220px, 60vw, 264px);
-            height: clamp(220px, 60vw, 264px);
-            margin: 10px auto 14px auto;
+            width: clamp(250px, 66vw, 310px);
+            height: clamp(250px, 66vw, 310px);
+            margin: 12px auto 18px auto;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            box-shadow: 0 0 38px var(--accent-glow);
+            box-shadow: 0 0 42px var(--accent-glow);
             transition: box-shadow 0.4s ease;
         }
 
@@ -317,7 +325,7 @@
         }
 
         #timer {
-            font-size: clamp(4rem, 16.5vw, 5.4rem);
+            font-size: clamp(4.6rem, 19vw, 6.4rem);
             font-weight: 850;
             line-height: 1;
             font-variant-numeric: tabular-nums;
@@ -326,19 +334,19 @@
         }
 
         .sec-label {
-            font-size: 0.72rem;
+            font-size: 0.78rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.16em;
             color: var(--text-muted);
-            margin-top: 6px;
+            margin-top: 8px;
         }
 
         .round-pill {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 7px 16px;
+            padding: 8px 18px;
             border-radius: 999px;
             background: var(--surface-bg);
             border: 1px solid var(--surface-border);
@@ -347,7 +355,7 @@
         }
 
         #round-info {
-            font-size: clamp(0.98rem, 3.4vw, 1.15rem);
+            font-size: clamp(1.02rem, 3.5vw, 1.2rem);
             color: var(--text-main);
             font-weight: 700;
             font-variant-numeric: tabular-nums;
@@ -357,6 +365,7 @@
             display: grid;
             grid-template-columns: 1.25fr 1fr;
             gap: 12px;
+            width: 100%;
         }
 
         .timer-buttons button {
@@ -397,13 +406,13 @@
         }
 
         #wake-status {
-            margin-top: 14px;
+            margin-top: 12px;
             font-size: 0.78rem;
             color: var(--text-muted);
             min-height: 1.1rem;
         }
 
-        /* Vollbild auf Smartphones & Tablets */
+        /* Vollbild auf Smartphones & Tablets im Hochformat */
         @media (max-width: 1024px) and (orientation: portrait),
                (pointer: coarse) and (max-width: 1180px) and (orientation: portrait) {
             body {
@@ -420,9 +429,9 @@
                 border: none;
                 box-shadow: none;
                 padding:
-                    calc(24px + env(safe-area-inset-top))
+                    calc(20px + env(safe-area-inset-top))
                     calc(24px + env(safe-area-inset-right))
-                    calc(28px + env(safe-area-inset-bottom))
+                    calc(24px + env(safe-area-inset-bottom))
                     calc(24px + env(safe-area-inset-left));
                 display: flex;
                 flex-direction: column;
@@ -451,14 +460,46 @@
                 padding: 16px 20px;
             }
 
+            .timer-layout {
+                flex: 1;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .timer-center-area {
+                flex: 1;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 8px 0;
+            }
+
             .ring-wrapper {
-                width: min(56vw, 340px);
-                height: min(56vw, 340px);
-                margin: 12px auto;
+                width: min(76vw, 44vh, 430px);
+                height: min(76vw, 44vh, 430px);
+                margin: 0 auto 22px auto;
             }
 
             #timer {
-                font-size: min(17vw, 6.2rem);
+                font-size: clamp(5rem, 22vw, 8.2rem);
+            }
+
+            .sec-label {
+                font-size: clamp(0.8rem, 2.4vw, 1rem);
+                margin-top: 10px;
+            }
+
+            .round-pill {
+                margin-bottom: 0;
+                padding: 10px 22px;
+            }
+
+            #round-info {
+                font-size: clamp(1.1rem, 3.5vw, 1.35rem);
             }
 
             .timer-footer {
@@ -474,11 +515,12 @@
             }
 
             .timer-buttons button {
-                min-height: 58px;
-                font-size: 1.1rem;
+                min-height: 60px;
+                font-size: 1.12rem;
             }
         }
 
+        /* Vollbild auf Smartphones & Tablets im Querformat */
         @media (max-width: 1180px) and (orientation: landscape),
                (pointer: coarse) and (max-width: 1366px) and (orientation: landscape),
                (max-height: 540px) and (orientation: landscape) {
@@ -505,11 +547,11 @@
             .screen.active {
                 flex: 1;
                 width: 100%;
-                max-width: 960px;
+                max-width: 1020px;
                 margin: 0 auto;
                 display: flex;
                 flex-direction: column;
-                justify-content: center;
+                justify-content: space-between;
             }
             .brand-tag {
                 margin-bottom: 6px;
@@ -518,21 +560,35 @@
                 margin-bottom: 14px;
             }
             .timer-layout {
+                flex: 1;
                 display: grid;
-                grid-template-columns: 1fr 1.1fr;
-                gap: 24px;
+                grid-template-columns: 1.1fr 1fr;
+                gap: 28px;
                 align-items: center;
             }
+            .timer-center-area {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
             .ring-wrapper {
-                width: clamp(160px, 38vh, 250px);
-                height: clamp(160px, 38vh, 250px);
-                margin: 4px auto;
+                width: clamp(200px, 52vh, 360px);
+                height: clamp(200px, 52vh, 360px);
+                margin: 0 auto 14px auto;
             }
             #timer {
-                font-size: clamp(2.8rem, 11vh, 4.4rem);
+                font-size: clamp(3.4rem, 15vh, 6.2rem);
             }
             .round-pill {
-                margin-bottom: 16px;
+                margin-bottom: 0;
+            }
+            .timer-footer {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
             }
         }
     </style>
@@ -594,22 +650,24 @@
         </div>
 
         <div class="timer-layout">
-            <div class="ring-wrapper">
-                <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
-                    <circle class="progress-ring__track" cx="110" cy="110" r="96"></circle>
-                    <circle id="ring-fill" class="progress-ring__fill" cx="110" cy="110" r="96"></circle>
-                </svg>
-                <div class="ring-inner">
-                    <div id="timer">45</div>
-                    <div class="sec-label">Sekunden</div>
+            <div class="timer-center-area">
+                <div class="ring-wrapper">
+                    <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
+                        <circle class="progress-ring__track" cx="110" cy="110" r="96"></circle>
+                        <circle id="ring-fill" class="progress-ring__fill" cx="110" cy="110" r="96"></circle>
+                    </svg>
+                    <div class="ring-inner">
+                        <div id="timer">45</div>
+                        <div class="sec-label">Sekunden</div>
+                    </div>
+                </div>
+
+                <div class="round-pill">
+                    <div id="round-info">Runde: 0 / 10</div>
                 </div>
             </div>
 
             <div class="timer-footer">
-                <div class="round-pill">
-                    <div id="round-info">Runde: 0 / 10</div>
-                </div>
-
                 <div class="timer-buttons">
                     <button id="toggle-btn" class="btn-start">Start</button>
                     <button id="reset-btn">Reset</button>
