@@ -403,36 +403,136 @@
             min-height: 1.1rem;
         }
 
-        @media (max-height: 540px) and (orientation: landscape) {
+        /* Vollbild auf Smartphones & Tablets */
+        @media (max-width: 1024px) and (orientation: portrait),
+               (pointer: coarse) and (max-width: 1180px) and (orientation: portrait) {
             body {
-                padding: 10px;
+                padding: 0;
+                align-items: stretch;
+                justify-content: stretch;
+            }
+
+            .container {
+                max-width: none;
+                width: 100%;
+                min-height: 100dvh;
+                border-radius: 0;
+                border: none;
+                box-shadow: none;
+                padding:
+                    calc(24px + env(safe-area-inset-top))
+                    calc(24px + env(safe-area-inset-right))
+                    calc(28px + env(safe-area-inset-bottom))
+                    calc(24px + env(safe-area-inset-left));
+                display: flex;
+                flex-direction: column;
+            }
+
+            .screen.active {
+                flex: 1;
+                width: 100%;
+                max-width: 680px;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .setup-header {
+                margin-top: 8px;
+            }
+
+            .setup-grid {
+                gap: 14px;
+                margin: 12px 0 20px 0;
+            }
+
+            .input-row {
+                padding: 16px 20px;
+            }
+
+            .ring-wrapper {
+                width: min(56vw, 340px);
+                height: min(56vw, 340px);
+                margin: 12px auto;
+            }
+
+            #timer {
+                font-size: min(17vw, 6.2rem);
+            }
+
+            .timer-footer {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+            }
+
+            .timer-buttons {
+                width: 100%;
+                gap: 14px;
+            }
+
+            .timer-buttons button {
+                min-height: 58px;
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 1180px) and (orientation: landscape),
+               (pointer: coarse) and (max-width: 1366px) and (orientation: landscape),
+               (max-height: 540px) and (orientation: landscape) {
+            body {
+                padding: 0;
+                align-items: stretch;
+                justify-content: stretch;
             }
             .container {
-                max-width: 740px;
-                border-radius: 24px;
+                max-width: none;
+                width: 100%;
+                min-height: 100dvh;
+                border-radius: 0;
+                border: none;
+                box-shadow: none;
+                padding:
+                    calc(16px + env(safe-area-inset-top))
+                    calc(28px + env(safe-area-inset-right))
+                    calc(16px + env(safe-area-inset-bottom))
+                    calc(28px + env(safe-area-inset-left));
+                display: flex;
+                flex-direction: column;
+            }
+            .screen.active {
+                flex: 1;
+                width: 100%;
+                max-width: 960px;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
             }
             .brand-tag {
                 margin-bottom: 6px;
             }
             h2 {
-                margin-bottom: 12px;
+                margin-bottom: 14px;
             }
             .timer-layout {
                 display: grid;
                 grid-template-columns: 1fr 1.1fr;
-                gap: 18px;
+                gap: 24px;
                 align-items: center;
             }
             .ring-wrapper {
-                width: clamp(148px, 34vh, 188px);
-                height: clamp(148px, 34vh, 188px);
+                width: clamp(160px, 38vh, 250px);
+                height: clamp(160px, 38vh, 250px);
                 margin: 4px auto;
             }
             #timer {
-                font-size: clamp(2.6rem, 10vh, 3.6rem);
+                font-size: clamp(2.8rem, 11vh, 4.4rem);
             }
             .round-pill {
-                margin-bottom: 14px;
+                margin-bottom: 16px;
             }
         }
     </style>
@@ -442,8 +542,10 @@
 <div class="container">
     <!-- SCREEN 1: EINSTELLUNGEN -->
     <section id="setup-screen" class="screen active">
-        <div class="brand-tag">Interval Workout</div>
-        <h2>Tabata Einstellungen</h2>
+        <div class="setup-header">
+            <div class="brand-tag">Interval Workout</div>
+            <h2>Tabata Einstellungen</h2>
+        </div>
 
         <div class="setup-grid">
             <div class="input-row">
@@ -503,7 +605,7 @@
                 </div>
             </div>
 
-            <div>
+            <div class="timer-footer">
                 <div class="round-pill">
                     <div id="round-info">Runde: 0 / 10</div>
                 </div>
@@ -512,10 +614,10 @@
                     <button id="toggle-btn" class="btn-start">Start</button>
                     <button id="reset-btn">Reset</button>
                 </div>
+
+                <div id="wake-status"></div>
             </div>
         </div>
-
-        <div id="wake-status"></div>
     </section>
 </div>
 
