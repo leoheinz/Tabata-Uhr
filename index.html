@@ -7,6 +7,39 @@
     <meta name="theme-color" content="#121212">
     <title>Tabata Timer</title>
     <style>
+        :root {
+            --bg-color: #101216;
+            --card-bg: #181c24;
+            --surface-bg: #232936;
+            --text-main: #f5f7fa;
+            --text-muted: #9aa3b2;
+            --accent: #3b82f6;
+            --ring-track: rgba(255, 255, 255, 0.12);
+        }
+
+        body.prep-phase {
+            --bg-color: #121d33;
+            --card-bg: #17243d;
+            --surface-bg: #223457;
+            --accent: #60a5fa;
+        }
+
+        /* Fitnesszeit: Rot */
+        body.work-phase {
+            --bg-color: #2c1015;
+            --card-bg: #38141b;
+            --surface-bg: #4d1c26;
+            --accent: #ff4d5a;
+        }
+
+        /* Ruhephase: Grün */
+        body.rest-phase {
+            --bg-color: #0f2918;
+            --card-bg: #143620;
+            --surface-bg: #1d4b2d;
+            --accent: #2ecc71;
+        }
+
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
@@ -14,8 +47,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -23,23 +56,27 @@
             min-height: 100dvh;
             margin: 0;
             padding: 16px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.35s ease;
             touch-action: manipulation;
         }
 
         .container {
-            background: #1e1e1e;
-            padding: clamp(1.25rem, 4vw, 2.25rem);
-            border-radius: 20px;
-            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.55);
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: clamp(1.25rem, 4vw, 2.2rem);
+            border-radius: 26px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
             text-align: center;
             width: 100%;
             max-width: 460px;
+            transition: background-color 0.35s ease;
         }
 
         h2 {
-            margin: 0 0 1rem 0;
-            font-size: clamp(1.35rem, 4vw, 1.7rem);
+            margin: 0 0 1.1rem 0;
+            font-size: clamp(1.35rem, 4vw, 1.75rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
 
         .inputs {
@@ -55,49 +92,97 @@
         }
 
         label {
-            font-size: 0.85rem;
-            color: #b5b5b5;
+            font-size: 0.8rem;
+            color: var(--text-muted);
             margin-bottom: 6px;
+            font-weight: 500;
         }
 
         input {
-            padding: 12px 6px;
+            padding: 11px 6px;
             font-size: 1.15rem;
-            font-weight: 600;
-            border-radius: 10px;
-            border: 1px solid #383838;
-            background: #2c2c2c;
-            color: #ffffff;
+            font-weight: 700;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--surface-bg);
+            color: var(--text-main);
             text-align: center;
             width: 100%;
+            transition: border-color 0.2s ease, background-color 0.35s ease;
         }
 
         input:focus {
-            outline: 2px solid #2ecc71;
-            border-color: transparent;
+            outline: none;
+            border-color: var(--accent);
         }
 
         #status {
-            font-size: clamp(1.25rem, 4vw, 1.65rem);
-            font-weight: 700;
+            font-size: clamp(1.1rem, 3.6vw, 1.45rem);
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-top: 8px;
-            min-height: 2rem;
+            color: var(--accent);
+            min-height: 1.9rem;
+            transition: color 0.35s ease;
+        }
+
+        .ring-wrapper {
+            position: relative;
+            width: clamp(210px, 58vw, 255px);
+            height: clamp(210px, 58vw, 255px);
+            margin: 10px auto 12px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-ring {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+            overflow: visible;
+        }
+
+        .progress-ring__track {
+            fill: none;
+            stroke: var(--ring-track);
+            stroke-width: 12;
+        }
+
+        .progress-ring__fill {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 12;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.92s linear, stroke 0.35s ease;
+        }
+
+        .progress-ring__fill.no-anim {
+            transition: stroke 0.35s ease;
+        }
+
+        .ring-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         #timer {
-            font-size: clamp(4.5rem, 22vw, 7rem);
-            font-weight: 800;
-            line-height: 1.05;
-            margin: 10px 0;
+            font-size: clamp(3.8rem, 16vw, 5.2rem);
+            font-weight: 850;
+            line-height: 1;
             font-variant-numeric: tabular-nums;
+            letter-spacing: -0.03em;
         }
 
         #round-info {
-            font-size: clamp(1.05rem, 3.5vw, 1.25rem);
-            color: #c2c2c2;
-            margin-bottom: 22px;
+            font-size: clamp(1rem, 3.4vw, 1.2rem);
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 20px;
         }
 
         .buttons {
@@ -108,41 +193,40 @@
 
         button {
             padding: 15px 10px;
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             font-weight: 700;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
             min-height: 52px;
-            transition: transform 0.1s ease, opacity 0.2s ease;
+            transition: transform 0.1s ease, filter 0.2s ease;
         }
 
         button:active {
             transform: scale(0.96);
         }
 
-        #start-btn { background-color: #2ecc71; color: #000000; }
-        #pause-btn { background-color: #f1c40f; color: #000000; }
-        #reset-btn { background-color: #e74c3c; color: #ffffff; }
+        button:hover {
+            filter: brightness(1.06);
+        }
+
+        #start-btn { background-color: #2ecc71; color: #071b0f; }
+        #pause-btn { background-color: #f5c518; color: #1c1600; }
+        #reset-btn { background-color: #ef4444; color: #ffffff; }
 
         #wake-status {
             margin-top: 14px;
             font-size: 0.8rem;
-            color: #9a9a9a;
+            color: var(--text-muted);
             min-height: 1.1rem;
         }
 
-        /* Farben für Phasen */
-        body.work-phase { background-color: #143622; }
-        body.rest-phase { background-color: #3b2a14; }
-
-        /* Querformat auf Smartphones/Tablets */
-        @media (max-height: 520px) and (orientation: landscape) {
+        @media (max-height: 540px) and (orientation: landscape) {
             body {
                 padding: 10px;
             }
             .container {
-                max-width: 720px;
+                max-width: 740px;
                 display: grid;
                 grid-template-columns: 1.1fr 1fr;
                 gap: 16px;
@@ -157,9 +241,13 @@
             .display-col {
                 text-align: center;
             }
+            .ring-wrapper {
+                width: clamp(145px, 34vh, 185px);
+                height: clamp(145px, 34vh, 185px);
+                margin: 4px auto 8px auto;
+            }
             #timer {
-                font-size: clamp(3.5rem, 14vh, 5rem);
-                margin: 4px 0;
+                font-size: clamp(2.6rem, 10vh, 3.6rem);
             }
             #round-info {
                 margin-bottom: 0;
@@ -175,11 +263,11 @@
     <div class="controls-col">
         <div class="inputs">
             <div class="input-group">
-                <label for="work-time">Übung (s)</label>
+                <label for="work-time">Fitness (s)</label>
                 <input type="number" id="work-time" inputmode="numeric" value="45" min="1">
             </div>
             <div class="input-group">
-                <label for="rest-time">Pause (s)</label>
+                <label for="rest-time">Ruhe (s)</label>
                 <input type="number" id="rest-time" inputmode="numeric" value="15" min="0">
             </div>
             <div class="input-group">
@@ -197,7 +285,15 @@
 
     <div class="display-col">
         <div id="status">BEREIT</div>
-        <div id="timer">45</div>
+        <div class="ring-wrapper">
+            <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
+                <circle class="progress-ring__track" cx="110" cy="110" r="96"></circle>
+                <circle id="ring-fill" class="progress-ring__fill no-anim" cx="110" cy="110" r="96"></circle>
+            </svg>
+            <div class="ring-inner">
+                <div id="timer">45</div>
+            </div>
+        </div>
         <div id="round-info">Runde: 0 / 10</div>
     </div>
 
@@ -205,6 +301,10 @@
 </div>
 
 <script>
+    const PREP_SECONDS = 5;
+    const RING_RADIUS = 96;
+    const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
     let audioCtx = null;
     let isRunning = false;
     let isPaused = false;
@@ -215,16 +315,111 @@
     let totalRounds = 10;
     let workSec = 45;
     let restSec = 15;
+    let phaseDuration = 45;
     let timeLeft = 45;
-    let isWorkPhase = true;
+    let phase = "idle"; // "prep" | "work" | "rest" | "idle"
 
     const statusEl = document.getElementById("status");
     const timerEl = document.getElementById("timer");
     const roundInfoEl = document.getElementById("round-info");
     const wakeStatusEl = document.getElementById("wake-status");
+    const ringFillEl = document.getElementById("ring-fill");
     const workInput = document.getElementById("work-time");
     const restInput = document.getElementById("rest-time");
     const roundsInput = document.getElementById("rounds");
+
+    ringFillEl.style.strokeDasharray = `${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`;
+    ringFillEl.style.strokeDashoffset = "0";
+
+    function setRingProgress(remaining, total, instant = false) {
+        if (instant) {
+            ringFillEl.classList.add("no-anim");
+        } else {
+            ringFillEl.classList.remove("no-anim");
+        }
+
+        const safeTotal = Math.max(total, 1);
+        const ratio = Math.max(0, Math.min(1, remaining / safeTotal));
+        // Bei vollem Timer offset = 0 (voller Kreis), bei 0 Sekunden offset = RING_CIRCUMFERENCE (leer)
+        const offset = RING_CIRCUMFERENCE * (1 - ratio);
+        ringFillEl.style.strokeDashoffset = `${offset}`;
+    }
+
+    function ensureAudioContext() {
+        if (!audioCtx) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                audioCtx = new AudioContextClass();
+            }
+        }
+        if (audioCtx && audioCtx.state === "suspended") {
+            audioCtx.resume();
+        }
+    }
+
+    function unlockSpeechAndAudio() {
+        ensureAudioContext();
+
+        if (audioCtx) {
+            const buffer = audioCtx.createBuffer(1, 1, 22050);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+        }
+
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.cancel();
+            const primer = new SpeechSynthesisUtterance("");
+            primer.lang = "en-US";
+            primer.volume = 0;
+            window.speechSynthesis.speak(primer);
+        }
+    }
+
+    function speakEnglish(text, rate = 1.0) {
+        if (!("speechSynthesis" in window)) return;
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "en-US";
+        utterance.rate = rate;
+        utterance.volume = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const englishVoice =
+            voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en-us")) ||
+            voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en"));
+
+        if (englishVoice) {
+            utterance.voice = englishVoice;
+        }
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function playBeep(freq, duration, volume = 0.5) {
+        ensureAudioContext();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.001, volume), now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+    }
 
     async function requestWakeLock() {
         if ("wakeLock" in navigator) {
@@ -248,7 +443,7 @@
                 await wakeLock.release();
                 wakeLock = null;
             } catch (err) {
-                // Ignorieren, falls bereits freigegeben
+                // Ignorieren
             }
         }
         wakeStatusEl.textContent = "";
@@ -260,33 +455,72 @@
         }
     });
 
-    function playBeep(freq, duration, volume = 0.5) {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === "suspended") {
-            audioCtx.resume();
-        }
-
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        gain.gain.value = volume;
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-    }
-
-    function updateUI(statusText, time, round, maxRounds, phaseClass = "") {
+    function updateUI(statusText, time, round, maxRounds, phaseClass = "", instantRing = false) {
         statusEl.textContent = statusText;
         timerEl.textContent = time;
         roundInfoEl.textContent = `Runde: ${round} / ${maxRounds}`;
         document.body.className = phaseClass;
+        setRingProgress(time, phaseDuration, instantRing);
+    }
+
+    function handlePrepCountdownTick() {
+        if (timeLeft > 0) {
+            updateUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase");
+
+            if (timeLeft === 3) {
+                speakEnglish("Three", 1.0);
+            } else if (timeLeft === 2) {
+                speakEnglish("Two", 1.0);
+            } else if (timeLeft === 1) {
+                speakEnglish("One", 1.0);
+            }
+        } else {
+            playBeep(950, 0.65, 1.0);
+            phase = "work";
+            currentRound = 1;
+            phaseDuration = workSec;
+            timeLeft = workSec;
+            updateUI("FITNESS!", timeLeft, currentRound, totalRounds, "work-phase", true);
+            if (timeLeft <= 3) {
+                playBeep(600, 0.15, 0.4);
+            }
+        }
+    }
+
+    function handleActivePhaseTick() {
+        const isWork = phase === "work";
+        const label = isWork ? "FITNESS!" : "RUHE";
+        const phaseClass = isWork ? "work-phase" : "rest-phase";
+
+        if (timeLeft > 0) {
+            updateUI(label, timeLeft, currentRound, totalRounds, phaseClass);
+            if (timeLeft <= 3) {
+                playBeep(600, 0.15, 0.4);
+            }
+        } else {
+            playBeep(950, 0.6, 1.0);
+
+            if (isWork && restSec > 0) {
+                phase = "rest";
+                phaseDuration = restSec;
+                timeLeft = restSec;
+                updateUI("RUHE", timeLeft, currentRound, totalRounds, "rest-phase", true);
+            } else {
+                currentRound++;
+                if (currentRound <= totalRounds) {
+                    phase = "work";
+                    phaseDuration = workSec;
+                    timeLeft = workSec;
+                    updateUI("FITNESS!", timeLeft, currentRound, totalRounds, "work-phase", true);
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    phase = "idle";
+                    releaseWakeLock();
+                    updateUI("FERTIG!", 0, totalRounds, totalRounds, "", false);
+                }
+            }
+        }
     }
 
     function tick() {
@@ -294,47 +528,28 @@
 
         timeLeft--;
 
-        if (timeLeft > 0) {
-            updateUI(
-                isWorkPhase ? "ÜBUNG!" : "PAUSE",
-                timeLeft,
-                currentRound,
-                totalRounds,
-                isWorkPhase ? "work-phase" : "rest-phase"
-            );
-
-            if (timeLeft <= 3) {
-                playBeep(600, 0.15, 0.4);
-            }
-        } else {
-            playBeep(950, 0.6, 1.0);
-
-            if (isWorkPhase && restSec > 0) {
-                isWorkPhase = false;
-                timeLeft = restSec;
-                updateUI("PAUSE", timeLeft, currentRound, totalRounds, "rest-phase");
-            } else {
-                currentRound++;
-                if (currentRound <= totalRounds) {
-                    isWorkPhase = true;
-                    timeLeft = workSec;
-                    updateUI("ÜBUNG!", timeLeft, currentRound, totalRounds, "work-phase");
-                } else {
-                    clearInterval(timerInterval);
-                    isRunning = false;
-                    releaseWakeLock();
-                    updateUI("FERTIG!", 0, totalRounds, totalRounds, "");
-                }
-            }
+        if (phase === "prep") {
+            handlePrepCountdownTick();
+        } else if (phase === "work" || phase === "rest") {
+            handleActivePhaseTick();
         }
     }
 
     document.getElementById("start-btn").addEventListener("click", async () => {
-        playBeep(0, 0.01, 0);
+        unlockSpeechAndAudio();
 
         if (isPaused) {
             isPaused = false;
-            statusEl.textContent = isWorkPhase ? "ÜBUNG!" : "PAUSE";
+            if (phase === "prep") {
+                statusEl.textContent = "BEREIT MACHEN";
+                document.body.className = "prep-phase";
+            } else if (phase === "work") {
+                statusEl.textContent = "FITNESS!";
+                document.body.className = "work-phase";
+            } else if (phase === "rest") {
+                statusEl.textContent = "RUHE";
+                document.body.className = "rest-phase";
+            }
             await requestWakeLock();
             return;
         }
@@ -344,15 +559,16 @@
             restSec = parseInt(restInput.value, 10) || 0;
             totalRounds = parseInt(roundsInput.value, 10) || 10;
 
-            currentRound = 1;
-            isWorkPhase = true;
-            timeLeft = workSec;
+            currentRound = 0;
+            phase = "prep";
+            phaseDuration = PREP_SECONDS;
+            timeLeft = PREP_SECONDS;
             isRunning = true;
             isPaused = false;
 
             await requestWakeLock();
-            updateUI("ÜBUNG!", timeLeft, currentRound, totalRounds, "work-phase");
-            if (timeLeft <= 3) playBeep(600, 0.15, 0.4);
+            updateUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase", true);
+            speakEnglish("Get ready and we start in", 1.0);
 
             clearInterval(timerInterval);
             timerInterval = setInterval(tick, 1000);
@@ -362,6 +578,9 @@
     document.getElementById("pause-btn").addEventListener("click", async () => {
         if (isRunning && !isPaused) {
             isPaused = true;
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
             statusEl.textContent = "PAUSIERT";
             await releaseWakeLock();
         }
@@ -371,20 +590,29 @@
         clearInterval(timerInterval);
         isRunning = false;
         isPaused = false;
+        phase = "idle";
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
         await releaseWakeLock();
         const w = parseInt(workInput.value, 10) || 45;
         const r = parseInt(roundsInput.value, 10) || 10;
-        updateUI("BEREIT", w, 0, r, "");
+        phaseDuration = w;
+        updateUI("BEREIT", w, 0, r, "", true);
     });
 
     workInput.addEventListener("input", () => {
-        if (!isRunning) timerEl.textContent = workInput.value || 0;
+        if (!isRunning) {
+            const w = parseInt(workInput.value, 10) || 0;
+            phaseDuration = Math.max(w, 1);
+            timerEl.textContent = w;
+            setRingProgress(w, phaseDuration, true);
+        }
     });
 
     roundsInput.addEventListener("input", () => {
         if (!isRunning) roundInfoEl.textContent = `Runde: 0 / ${roundsInput.value || 0}`;
     });
-    
 </script>
 
 </body>
