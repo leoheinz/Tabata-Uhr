@@ -498,10 +498,13 @@
 
     function ensureAudioContext() {
         if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                audioCtx = new AudioCtx();
+            }
         }
-        if (audioCtx.state === "suspended") {
-            audioCtx.resume();
+        if (audioCtx && audioCtx.state === "suspended") {
+            audioCtx.resume().catch(() => {});
         }
     }
 
@@ -596,6 +599,7 @@
 
     document.addEventListener("visibilitychange", async () => {
         if (document.visibilityState === "visible" && isRunning && !isPaused) {
+            ensureAudioContext();
             await requestWakeLock();
             resumeRingAnimation();
         }
@@ -799,5 +803,6 @@
         prepareTimerScreenFromInputs();
     });
 </script>
+
 </body>
 </html>
