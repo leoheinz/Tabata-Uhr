@@ -219,10 +219,6 @@
             stroke: var(--accent);
             stroke-width: 12;
             stroke-linecap: round;
-            transition: stroke-dashoffset 0.92s linear, stroke 0.35s ease;
-        }
-
-        .progress-ring__fill.no-anim {
             transition: stroke 0.35s ease;
         }
 
@@ -347,7 +343,7 @@
             </div>
         </div>
 
-        <button id="go-to-timer-btn" class="primary-go-btn">Start</button>
+        <button id="go-to-timer-btn" class="primary-go-btn">Weiter zum Timer</button>
     </section>
 
     <!-- SCREEN 2: TIMER -->
@@ -364,7 +360,7 @@
             <div class="ring-wrapper">
                 <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
                     <circle class="progress-ring__track" cx="110" cy="110" r="96"></circle>
-                    <circle id="ring-fill" class="progress-ring__fill no-anim" cx="110" cy="110" r="96"></circle>
+                    <circle id="ring-fill" class="progress-ring__fill" cx="110" cy="110" r="96"></circle>
                 </svg>
                 <div class="ring-inner">
                     <div id="timer">45</div>
@@ -394,6 +390,7 @@
     let isRunning = false;
     let isPaused = false;
     let timerInterval = null;
+    let rafId = null;
     let wakeLock = null;
 
     let currentRound = 0;
@@ -403,6 +400,11 @@
     let phaseDuration = 45;
     let timeLeft = 45;
     let phase = "idle"; // "prep" | "work" | "rest" | "idle"
+
+    // Zeitstempel für flüssigen Kreis und genaue Restzeit
+    let phaseStartTime = 0;
+    let phaseEndTime = 0;
+    let pausedRemainingMs = 0;
 
     const setupScreen = document.getElementById("setup-screen");
     const timerScreen = document.getElementById("timer-screen");
@@ -421,6 +423,57 @@
 
     ringFillEl.style.strokeDasharray = `${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`;
     ringFillEl.style.strokeDashoffset = "0";
+
+    function setRingFraction(fractionRemaining) {
+        const clamped = Math.max(0, Math.min(1, fractionRemaining));
+        const offset = RING_CIRCUMFERENCE * (1 - clamped);
+        ringFillEl.style.strokeDashoffset = `${offset}`;
+    }
+
+    function stopRingAnimation() {
+        if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+    }
+
+    function animateRing() {
+        if (!isRunning || isPaused || phase === "idle") {
+            rafId = null;
+            return;
+        }
+
+        const now = performance.now();
+        const totalMs = Math.max(phaseDuration * 1000, 1);
+        const remainingMs = Math.max(0, phaseEndTime - now);
+        setRingFraction(remainingMs / totalMs);
+
+        if (remainingMs > 0) {
+            rafId = requestAnimationFrame(animateRing);
+        } else {
+            setRingFraction(0);
+            rafId = null;
+        }
+    }
+
+    function startRingAnimation(durationSec) {
+        stopRingAnimation();
+        const now = performance.now();
+        phaseDuration = Math.max(durationSec, 1);
+        phaseStartTime = now;
+        phaseEndTime = now + phaseDuration * 1000;
+        setRingFraction(1);
+        rafId = requestAnimationFrame(animateRing);
+    }
+
+    function resumeRingAnimation() {
+        stopRingAnimation();
+        const now = performance.now();
+        const totalMs = Math.max(phaseDuration * 1000, 1);
+        phaseEndTime = now + pausedRemainingMs;
+        phaseStartTime = phaseEndTime - totalMs;
+        rafId = requestAnimationFrame(animateRing);
+    }
 
     function showScreen(screenName) {
         if (screenName === "setup") {
@@ -441,19 +494,6 @@
             toggleBtn.textContent = "Start";
             toggleBtn.className = "btn-start";
         }
-    }
-
-    function setRingProgress(remaining, total, instant = false) {
-        if (instant) {
-            ringFillEl.classList.add("no-anim");
-        } else {
-            ringFillEl.classList.remove("no-anim");
-        }
-
-        const safeTotal = Math.max(total, 1);
-        const ratio = Math.max(0, Math.min(1, remaining / safeTotal));
-        const offset = RING_CIRCUMFERENCE * (1 - ratio);
-        ringFillEl.style.strokeDashoffset = `${offset}`;
     }
 
     function ensureAudioContext() {
@@ -483,8 +523,17 @@
         osc.stop(audioCtx.currentTime + duration);
     }
 
-    function unlockSpeechAndAudio() {
-        playBeep(0, 0.01, 0);
+    function unlockAudioAndSpeechSync() {
+        ensureAudioContext();
+        if (audioCtx) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0.0001;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.02);
+        }
 
         if ("speechSynthesis" in window) {
             window.speechSynthesis.getVoices();
@@ -548,15 +597,15 @@
     document.addEventListener("visibilitychange", async () => {
         if (document.visibilityState === "visible" && isRunning && !isPaused) {
             await requestWakeLock();
+            resumeRingAnimation();
         }
     });
 
-    function updateUI(statusText, time, round, maxRounds, phaseClass = "", instantRing = false) {
+    function updateTextAndPhaseUI(statusText, time, round, maxRounds, phaseClass = "") {
         statusEl.textContent = statusText;
         timerEl.textContent = time;
         roundInfoEl.textContent = `Runde: ${round} / ${maxRounds}`;
         document.body.className = phaseClass;
-        setRingProgress(time, phaseDuration, instantRing);
     }
 
     function readInputs() {
@@ -568,20 +617,34 @@
         roundsInput.value = totalRounds;
     }
 
-    async function startNewWorkout() {
+    function prepareTimerScreenFromInputs() {
         readInputs();
-        unlockSpeechAndAudio();
+        currentRound = 0;
+        phase = "idle";
+        phaseDuration = workSec;
+        timeLeft = workSec;
+        isRunning = false;
+        isPaused = false;
+        stopRingAnimation();
+        syncToggleButton();
+        setRingFraction(1);
+        updateTextAndPhaseUI("BEREIT", workSec, 0, totalRounds, "");
+    }
+
+    function startNewWorkout() {
+        readInputs();
+        unlockAudioAndSpeechSync();
 
         currentRound = 0;
         phase = "prep";
-        phaseDuration = PREP_SECONDS;
         timeLeft = PREP_SECONDS;
         isRunning = true;
         isPaused = false;
 
         syncToggleButton();
-        await requestWakeLock();
-        updateUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase", true);
+        requestWakeLock();
+        updateTextAndPhaseUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase");
+        startRingAnimation(PREP_SECONDS);
         speakEnglish("Get ready and we start in", 1.0);
 
         clearInterval(timerInterval);
@@ -590,7 +653,7 @@
 
     function handlePrepCountdownTick() {
         if (timeLeft > 0) {
-            updateUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase");
+            updateTextAndPhaseUI("BEREIT MACHEN", timeLeft, 0, totalRounds, "prep-phase");
 
             if (timeLeft === 3) {
                 speakEnglish("Three", 1.0);
@@ -603,9 +666,9 @@
             playBeep(950, 0.6, 1.0);
             phase = "work";
             currentRound = 1;
-            phaseDuration = workSec;
             timeLeft = workSec;
-            updateUI("FITNESS!", timeLeft, currentRound, totalRounds, "work-phase", true);
+            updateTextAndPhaseUI("FITNESS!", timeLeft, currentRound, totalRounds, "work-phase");
+            startRingAnimation(workSec);
             if (timeLeft <= 3) {
                 playBeep(600, 0.15, 0.4);
             }
@@ -618,7 +681,7 @@
         const phaseClass = isWork ? "work-phase" : "rest-phase";
 
         if (timeLeft > 0) {
-            updateUI(label, timeLeft, currentRound, totalRounds, phaseClass);
+            updateTextAndPhaseUI(label, timeLeft, currentRound, totalRounds, phaseClass);
             if (timeLeft <= 3) {
                 playBeep(600, 0.15, 0.4);
             }
@@ -627,24 +690,26 @@
 
             if (isWork && restSec > 0) {
                 phase = "rest";
-                phaseDuration = restSec;
                 timeLeft = restSec;
-                updateUI("RUHE", timeLeft, currentRound, totalRounds, "rest-phase", true);
+                updateTextAndPhaseUI("RUHE", timeLeft, currentRound, totalRounds, "rest-phase");
+                startRingAnimation(restSec);
             } else {
                 currentRound++;
                 if (currentRound <= totalRounds) {
                     phase = "work";
-                    phaseDuration = workSec;
                     timeLeft = workSec;
-                    updateUI("FITNESS!", timeLeft, currentRound, totalRounds, "work-phase", true);
+                    updateTextAndPhaseUI("FITNESS!", timeLeft, currentRound, totalRounds, "work-phase");
+                    startRingAnimation(workSec);
                 } else {
                     clearInterval(timerInterval);
+                    stopRingAnimation();
+                    setRingFraction(0);
                     isRunning = false;
                     isPaused = false;
                     phase = "idle";
                     syncToggleButton();
                     releaseWakeLock();
-                    updateUI("FERTIG!", 0, totalRounds, totalRounds, "", false);
+                    updateTextAndPhaseUI("FERTIG!", 0, totalRounds, totalRounds, "");
                 }
             }
         }
@@ -664,6 +729,7 @@
 
     async function stopWorkoutToIdle() {
         clearInterval(timerInterval);
+        stopRingAnimation();
         isRunning = false;
         isPaused = false;
         phase = "idle";
@@ -676,26 +742,33 @@
         syncToggleButton();
     }
 
+    // Von Screen 1 auf Screen 2 wechseln (ohne Autostart)
     goToTimerBtn.addEventListener("click", async () => {
+        unlockAudioAndSpeechSync();
+        await stopWorkoutToIdle();
+        prepareTimerScreenFromInputs();
         showScreen("timer");
-        await startNewWorkout();
     });
 
+    // Pfeil links oben: Zurück zu den Einstellungen
     backBtn.addEventListener("click", async () => {
         await stopWorkoutToIdle();
         showScreen("setup");
     });
 
+    // Start / Pause Umschalt-Button auf dem Timer-Screen
     toggleBtn.addEventListener("click", async () => {
-        unlockSpeechAndAudio();
+        unlockAudioAndSpeechSync();
 
         if (!isRunning) {
-            await startNewWorkout();
+            startNewWorkout();
             return;
         }
 
         if (!isPaused) {
             isPaused = true;
+            pausedRemainingMs = Math.max(0, phaseEndTime - performance.now());
+            stopRingAnimation();
             if ("speechSynthesis" in window) {
                 window.speechSynthesis.cancel();
             }
@@ -715,15 +788,15 @@
                 statusEl.textContent = "RUHE";
                 document.body.className = "rest-phase";
             }
+            resumeRingAnimation();
             await requestWakeLock();
         }
     });
 
+    // Reset-Button auf dem Timer-Screen
     resetBtn.addEventListener("click", async () => {
-        readInputs();
         await stopWorkoutToIdle();
-        phaseDuration = workSec;
-        updateUI("BEREIT", workSec, 0, totalRounds, "", true);
+        prepareTimerScreenFromInputs();
     });
 </script>
 
